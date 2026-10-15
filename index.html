@@ -197,7 +197,7 @@ async function cleanupImgs(){const td=iso(new Date());if(cleaning||!fh||!acct&&!
   for(const p in orph)if(!listed.has(p)||refs.has(p)){delete orph[p];ch=true}
   for(const p of files){if(refs.has(p)||!/^images\/[^\/]+$/.test(p))continue;
    if(!orph[p]){orph[p]=td;ch=true;continue}
-   if((new Date(td+'T12:00')-new Date(orph[p]+'T12:00'))/864e5>=30){const r=await gfetch(GI(p),{method:'DELETE'});if(r.ok||r.status==404){delete orph[p];imgCache.delete(p);ch=true}}}
+   if((new Date(td+'T12:00')-new Date(orph[p]+'T12:00'))/864e5>=7){const r=await gfetch(GI(p),{method:'DELETE'});if(r.ok||r.status==404){delete orph[p];imgCache.delete(p);ch=true}}}
   data.lastCleanup=td;save()}catch(e){}finally{cleaning=false}}
 // ===== Image select / resize =====
 let selImg=null;const bar=document.createElement('div');bar.id='imgbar';bar.hidden=true;

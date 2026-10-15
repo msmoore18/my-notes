@@ -1,0 +1,27 @@
+// ===== Images stored as separate files in the OneDrive app folder =====
+const imgCache=new Map(); // path -> Promise<blob url>
+const GI=p=>'https://graph.microsoft.com/v1.0/me/drive/special/approot:/'+p.split('/').map(encodeURIComponent).join('/')+':/content';
+function getImg(p){if(!imgCache.has(p))imgCache.set(p,gfetch(GI(p)).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()}).then(b=>URL.createObjectURL(b)).catch(e=>{imgCache.delete(p);throw e}));return imgCache.get(p)}
+function hydrate(root){root.querySelectorAll('img[data-od]').forEach(im=>{if(im.getAttribute('src'))return;im.classList.add('imgload');getImg(im.dataset.od).then(u=>{im.src=u;im.classList.remove('imgload')}).catch(()=>{im.classList.remove('imgload');im.alt='(image could not be loaded: '+im.dataset.od+')'})})}
+function noteHTML(){const c=$('txt').cloneNode(true);c.querySelectorAll('img').forEach(im=>{if(im.dataset.pending)return im.remove();if(im.dataset.od){im.removeAttribute('src');im.classList.remove('imgload');if(!im.className)im.removeAttribute('class');im.removeAttribute('alt')}else if(/^blob:/.test(im.getAttribute('src')||''))im.remove()});return c.innerHTML}
+function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return iso(d)+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'_'+Math.random().toString(36).slice(2,8)}
+async function uploadImg(blob){const ext=((blob.type||'image/png').split('/')[1]||'png').replace('jpeg','jpg').replace(/[^a-z0-9]/g,'');const p='images/'+stamp()+'.'+ext;
+ const r=await gfetch(GI(p),{method:'PUT',headers:{'Content-Type':blob.type||'image/png'},body:blob});if(!r.ok)throw new Error('Upload failed ('+r.status+')');imgCache.set(p,Promise.resolve(URL.createObjectURL(blob)));return p}
+const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function pasteImg(file){const id='p'+Math.random().toString(36).slice(2),k=iso(cur);
+ document.execCommand('insertHTML',false,'<img data-pending="'+id+'" class="imgup" src="'+URL.createObjectURL(file)+'"><br>');
+ const el=()=>document.querySelector('img[data-pending="'+id+'"]');
+ try{const p=await uploadImg(file);const im=el();if(im){delete im.dataset.pending;im.classList.remove('imgup');im.dataset.od=p;getImg(p).then(u=>im.src=u)}
+  else{data.notes[k]=(data.notes[k]||'')+'<img data-od="'+p+'"><br>'}}
+ catch(e){const im=el(),du=await toDataURL(file);if(im){delete im.dataset.pending;im.classList.remove('imgup');im.src=du}else data.notes[k]=(data.notes[k]||'')+'<img src="'+du+'"><br>';
+  st('Image not uploaded ('+e.message+'); kept inside the note instead',true)}
+ if(iso(cur)===k)data.notes[k]=noteHTML();save()}
+let migrating=false;
+async function migrateImgs(){if(migrating)return;migrating=true;let changed=false,failed=0;
+ try{for(const k of Object.keys(data.notes)){const v=data.notes[k];if(!/<img[^>]+src=["']data:/i.test(v))continue;
+  const d=document.createElement('div');d.innerHTML=v;let ch=false;
+  for(const im of d.querySelectorAll('img[src^="data:"]')){try{const b=await (await fetch(im.getAttribute('src'))).blob();const p=await uploadImg(b);im.removeAttribute('src');im.dataset.od=p;ch=true}catch(e){failed++}}
+  if(ch&&data.notes[k]===v){data.notes[k]=d.innerHTML;changed=true;if(k===iso(cur)&&document.activeElement!==$('txt'))showDay()}}
+ if(changed)save();if(failed)st(failed+' old image(s) could not be moved to OneDrive; kept inside notes',true)}finally{migrating=false}}
+$('txt').addEventListener('click',e=>{if(e.target.tagName!=='IMG'||!e.target.src)return;const o=document.createElement('div');o.id='imgview';const i=document.createElement('img');i.src=e.target.src;o.append(i);o.onclick=()=>o.remove();document.body.append(o)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('imgview'))$('imgview').remove()});
