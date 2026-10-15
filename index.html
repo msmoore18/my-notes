@@ -156,6 +156,15 @@ async function boot(){if(!CLIENT_ID||CLIENT_ID.includes('PASTE'+'_')){$('setup')
  if(acct){st('Loading from OneDrive...');try{await load()}catch(e){st(e.message,true)}}else st('Sign in to load your notes',true)}
 function showDay(){const k=iso(cur);$('day').textContent=cur.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});const v=data.notes[k]||'';$('txt').innerHTML=/<[a-z]/i.test(v)?v:v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');$('next').disabled=k>=iso(new Date())}
 $('txt').oninput=()=>{data.notes[iso(cur)]=$('txt').innerHTML;save()};
+$('txt').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Enter')return;const s=getSelection();if(!s.rangeCount||!s.isCollapsed)return;
+ const n=s.anchorNode;if(!n||n.nodeType!==3)return;const before=n.textContent.slice(0,s.anchorOffset);
+ const m=before.match(/([-+*\/x×÷^%().,$\d\s]+)=$/);if(!m)return;let ex=m[1].trim();
+ if(!/\d/.test(ex)||!/\d\s*[-+*\/x×÷^%]\s*[\d(.$]|\)\s*[-+*\/x×÷^]/.test(ex))return;
+ ex=ex.replace(/[$,]/g,'').replace(/[x×]/g,'*').replace(/÷/g,'/').replace(/\^/g,'**').replace(/(\d+(?:\.\d+)?)%/g,'($1/100)');
+ if(!/^[\d\s.+\-*\/()]+$/.test(ex))return;let v;try{v=Function('"use strict";return ('+ex+')')()}catch(_){return}
+ if(typeof v!=='number'||!isFinite(v))return;v=Math.round(v*1e10)/1e10;
+ const out=Math.abs(v)>=1000?v.toLocaleString('en-US',{maximumFractionDigits:10}):String(v);
+ document.execCommand('insertText',false,out)});
 $('txt').onpaste=e=>{const it=[...e.clipboardData.items].find(i=>i.type.startsWith('image/'));
  if(it){e.preventDefault();const r=new FileReader();r.onload=()=>{document.execCommand('insertHTML',false,'<img src="'+r.result+'"><br>');};r.readAsDataURL(it.getAsFile());return}
  e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))};
