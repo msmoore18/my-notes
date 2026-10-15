@@ -171,11 +171,11 @@ async function uploadImg(blob){const ext=((blob.type||'image/png').split('/')[1]
  const r=await gfetch(GI(p),{method:'PUT',headers:{'Content-Type':blob.type||'image/png'},body:blob});if(!r.ok)throw new Error('Upload failed ('+r.status+')');imgCache.set(p,Promise.resolve(URL.createObjectURL(blob)));return p}
 const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
 async function pasteImg(file){const id='p'+Math.random().toString(36).slice(2),k=iso(cur);
- document.execCommand('insertHTML',false,'<img data-pending="'+id+'" class="imgup" src="'+URL.createObjectURL(file)+'"><br>');
+ document.execCommand('insertHTML',false,'<img data-pending="'+id+'" class="imgup" style="width:25%" src="'+URL.createObjectURL(file)+'"><br>');
  const el=()=>document.querySelector('img[data-pending="'+id+'"]');
  try{const p=await uploadImg(file);const im=el();if(im){delete im.dataset.pending;im.classList.remove('imgup');im.dataset.od=p;getImg(p).then(u=>im.src=u)}
-  else{data.notes[k]=(data.notes[k]||'')+'<img data-od="'+p+'"><br>'}}
- catch(e){const im=el(),du=await toDataURL(file);if(im){delete im.dataset.pending;im.classList.remove('imgup');im.src=du}else data.notes[k]=(data.notes[k]||'')+'<img src="'+du+'"><br>';
+  else{data.notes[k]=(data.notes[k]||'')+'<img data-od="'+p+'" style="width:25%"><br>'}}
+ catch(e){const im=el(),du=await toDataURL(file);if(im){delete im.dataset.pending;im.classList.remove('imgup');im.src=du}else data.notes[k]=(data.notes[k]||'')+'<img src="'+du+'" style="width:25%"><br>';
   st('Image not uploaded ('+e.message+'); kept inside the note instead',true)}
  if(iso(cur)===k)data.notes[k]=noteHTML();save()}
 let migrating=false;
