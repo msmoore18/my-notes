@@ -1,0 +1,219 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#33bb66"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="My Notes"><title>My Notes</title><link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='8' y='4' width='44' height='56' rx='8' fill='%233b6'/><rect x='14' y='10' width='32' height='44' rx='4' fill='%23fff'/><path d='M20 22h20M20 30h20M20 38h12' stroke='%23999' stroke-width='3' stroke-linecap='round'/><circle cx='48' cy='48' r='13' fill='%23f5a623' stroke='%23fff' stroke-width='3'/><path d='M42 48l4 4 8-8' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f6f5f2;color:#222}
+nav{display:flex;align-items:center;gap:4px;padding:12px 20px 0;background:#fff;border-bottom:1px solid #ddd}
+nav button.t{border:0;background:none;padding:10px 18px;font-size:16px;cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{border-color:#3b6;font-weight:600}
+#file{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:#666;padding-bottom:8px}
+button.b{border:1px solid #ccc;background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer}
+#status.warn{color:#c33;font-weight:600}
+main{max-width:800px;margin:24px auto;padding:0 20px}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.hdr h2{margin:0;flex:1;font-size:20px}
+#txt{min-height:65vh;box-sizing:border-box;padding:14px;font-size:16px;line-height:1.5;border:1px solid #ddd;border-radius:8px;background:#fff;outline:none;white-space:pre-wrap;overflow-wrap:anywhere}
+#tb{display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:#fff;border:1px solid #ddd;border-bottom:0;border-radius:8px 8px 0 0;padding:6px}
+#tb button{border:1px solid transparent;background:none;border-radius:4px;padding:4px 8px;font-size:14px;cursor:pointer;min-width:30px}
+#tb button:hover{background:#eee;border-color:#ddd}
+#tb .sep{width:1px;height:20px;background:#ddd;margin:0 4px}
+#tb .sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle}
+#txt{border-radius:0 0 8px 8px !important}
+#txt ul,#txt ol{margin:4px 0;padding-left:28px;white-space:normal}
+#txt h3{margin:10px 0 4px;font-size:18px}
+#txt:empty:before{content:attr(data-ph);color:#aaa}
+#txt img{max-width:100%;display:block;margin:8px 0;border:1px solid #ddd;border-radius:4px}
+.add{display:flex;gap:8px;margin-bottom:16px}
+.add input{flex:1;padding:10px;font-size:16px;border:1px solid #ccc;border-radius:6px}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;align-items:center;gap:12px;background:#fff;padding:10px 14px;border-radius:8px;margin-bottom:6px;border:1px solid #e3e3e3}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid #3b6;cursor:pointer;flex:none}
+.dot:hover{background:#3b6}
+li small{margin-left:auto;color:#999}
+.arch li{opacity:.6}.arch .dot{border-color:#999}
+details{margin-top:24px;color:#666}
+.flag{font-size:20px;cursor:pointer;flex:none;line-height:1}
+.flag.none{color:#ccc}.flag.none:hover{color:#999}.flag.yellow{color:#e6b800}.flag.red{color:#d33}
+
+.yt{cursor:pointer}.yt:hover{text-decoration:underline}
+#ylist li{flex-wrap:wrap}
+.det{flex-basis:100%;margin:8px 0 2px 32px;font-size:14px}
+.dv{white-space:pre-wrap;background:#fafafa;border:1px solid #eee;border-radius:6px;padding:10px;margin-bottom:8px;overflow-wrap:anywhere}
+.det .nm{display:block;margin-bottom:8px;padding:8px;font-size:15px;border:1px solid #ccc;border-radius:6px}.det input.nm:not([type]){width:100%;box-sizing:border-box}
+.det textarea{width:100%;min-height:200px;box-sizing:border-box;padding:10px;font:14px system-ui;border:1px solid #ccc;border-radius:6px;margin-bottom:8px}
+h3.sec{margin:32px 0 10px;font-size:18px}h3 .sub{font-size:13px;color:#999;font-weight:400;margin-left:6px}
+input[type=date]{flex:none !important}
+li.ydone{opacity:.55;text-decoration:line-through}li.ydone .dot{background:#3b6}
+li.yover{border-left:5px solid #d33;background:#fff5f5}li.ysoon{border-left:5px solid #e6b800;background:#fffbea}
+.x{cursor:pointer;color:#bbb;margin-left:8px}.x:hover{color:#d33}
+.cal{margin-top:18px;background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:12px}
+#cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+#cgrid div{min-height:64px;border:1px solid #f0f0f0;border-radius:4px;padding:3px;font-size:11px;overflow:hidden}
+#cgrid .dh{min-height:0;border:0;text-align:center;font-weight:600;color:#888}
+#cgrid .td{background:#eef9f0;border-color:#3b6}#cgrid .n{color:#999}
+#cgrid .ev{background:#3b6;color:#fff;border-radius:3px;padding:1px 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cgrid .ev.d{background:#bbb;text-decoration:line-through}#cgrid .ev.o{background:#d33}
+li.red{border-left:5px solid #d33;background:#fff5f5}li.yel{border-left:5px solid #e6b800;background:#fffbea}
+#setup{max-width:640px;margin:40px auto;padding:20px;background:#fff;border:1px solid #ddd;border-radius:8px;line-height:1.5}
+@media (max-width:700px){nav{flex-wrap:wrap;padding:6px 8px 0}nav button.t{padding:10px 10px;font-size:15px;flex:1}#file{margin-left:0;width:100%;flex-wrap:wrap;padding:6px 0}main{margin:12px auto;padding:0 10px}#tb button{padding:6px 8px;min-width:36px}.add{flex-wrap:wrap}.add input{min-width:0}#txt{min-height:55vh}li{gap:8px;padding:10px}.det{margin-left:0}#cgrid div{min-height:48px;font-size:9px}.hdr h2{font-size:16px}}
+</style></head><body>
+<nav><button class="t on" id="tn">Daily Notes</button><button class="t" id="tt">Tasks</button><button class="t" id="ty">Yearly Tasks</button>
+<div id="file"><span id="status" class="warn">Not signed in</span>
+<button class="b" id="signin">Sign in with Microsoft</button><button class="b" id="imp" hidden>Import old data file</button><button class="b" id="signout" hidden>Sign out</button><input type="file" id="impf" accept=".json,application/json" hidden></div></nav>
+<div id="setup" hidden><h2>Almost ready</h2><p>This app needs a Microsoft app registration before it can save to OneDrive. Paste the Application (client) ID into <code>CLIENT_ID</code> at the top of the script in <code>index.html</code>, then reload.</p></div>
+<main>
+<section id="notes">
+<div class="hdr"><button class="b" id="prev">&#9664;</button><h2 id="day"></h2><button class="b" id="next">&#9654;</button><button class="b" id="today">Today</button></div>
+<div id="tb">
+<button data-c="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+<button data-c="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+<button data-c="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+<button data-c="strikeThrough" title="Strikethrough"><s>S</s></button>
+<span class="sep"></span>
+<button data-c="hl" data-v="#fff176" title="Yellow highlight"><span class="sw" style="background:#fff176"></span></button>
+<button data-c="hl" data-v="#a5f3a1" title="Green highlight"><span class="sw" style="background:#a5f3a1"></span></button>
+<button data-c="hl" data-v="#ffb3b3" title="Red highlight"><span class="sw" style="background:#ffb3b3"></span></button>
+<button data-c="hl" data-v="transparent" title="Remove highlight"><span class="sw" style="background:#fff;border:1px dashed #999"></span></button>
+<button data-c="foreColor" data-v="#d33" title="Red text"><span style="color:#d33;font-weight:700">A</span></button>
+<span class="sep"></span>
+<button data-c="formatBlock" data-v="H3" title="Heading">H</button>
+<button data-c="formatBlock" data-v="DIV" title="Normal text">T</button>
+<button data-c="insertUnorderedList" title="Bullets">&bull; List</button>
+<button data-c="insertOrderedList" title="Numbered list">1. List</button>
+<button data-c="indent" title="Indent">&rarr;</button>
+<button data-c="outdent" title="Outdent">&larr;</button>
+<span class="sep"></span>
+<button data-c="removeFormat" title="Clear formatting">Clear</button>
+</div>
+<div id="txt" contenteditable="true" data-ph="Today's work notes... (paste screenshots with Ctrl+V)"></div>
+</section>
+<section id="tasks" hidden>
+<div class="add"><input id="newt" placeholder="New task, press Enter"><button class="b" id="addb">Add</button></div>
+<ul id="list"></ul>
+<details><summary>Archived (<span id="ac">0</span>)</summary><ul id="alist" class="arch"></ul></details>
+</section>
+<section id="yearly" hidden>
+<h3 class="sec" style="margin-top:0">Yearly tasks <span class="sub">done for this year, back again next year</span></h3>
+<div class="add"><input id="ytext" placeholder="Yearly task, e.g. Renew crop insurance"><input id="ydate" type="date"><button class="b" id="yadd">Add</button></div>
+<ul id="ylist"></ul>
+<div class="cal"><div class="hdr"><button class="b" id="cprev">&#9664;</button><h2 id="cmon"></h2><button class="b" id="cnext">&#9654;</button></div><div id="cgrid"></div></div>
+</section>
+</main>
+<script src="msal-browser.min.js"></script>
+<script>
+// ===== SETUP: paste your Application (client) ID from the Azure portal here =====
+const CLIENT_ID = 'PASTE_CLIENT_ID_HERE';
+// ===============================================================================
+
+const $=id=>document.getElementById(id);
+const iso=d=>d.toLocaleDateString('en-CA');
+try{localStorage.removeItem('nt_data');indexedDB.deleteDatabase('nt')}catch(e){}
+let data={notes:{},tasks:[],yearly:[]};
+let fh=null,cur=new Date(),timer=null; // fh = true when connected to OneDrive
+let etag=null,saving=false,dirty=false,acct=null,pca=null;
+const SCOPES=['Files.ReadWrite.AppFolder'];
+const G='https://graph.microsoft.com/v1.0/me/drive/special/approot:/notes-data.json';
+function st(t,w){$('status').textContent=t;$('status').className=w?'warn':''}
+const tm=()=>new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+async function token(){try{return (await pca.acquireTokenSilent({scopes:SCOPES,account:acct})).accessToken}catch(e){await pca.acquireTokenRedirect({scopes:SCOPES,account:acct});throw e}}
+async function gfetch(url,o={}){const t=await token();o.headers=Object.assign({Authorization:'Bearer '+t},o.headers||{});return fetch(url,o)}
+function norm(d){d=d||{};d.notes=d.notes||{};d.tasks=d.tasks||[];d.yearly=d.yearly||[];return d}
+async function load(quiet){if(!acct||saving||dirty)return;
+ const r=await gfetch(G+'?select=id,eTag,size');
+ if(r.status==404){etag=null;data=norm(data);fh=true;lock(false);showDay();render();rY();await writeFile();return}
+ if(!r.ok)throw new Error('Load failed ('+r.status+')');
+ const m=await r.json();if(quiet&&m.eTag===etag)return;
+ const c=await gfetch(G+':/content');if(!c.ok)throw new Error('Load failed ('+c.status+')');
+ const t=await c.text();if(saving||dirty)return;data=norm(t.trim()?JSON.parse(t):{});etag=m.eTag;fh=true;lock(false);
+ const ae=document.activeElement;const editing=ae&&ae.id=='txt';if(!editing)showDay();render();if(!document.querySelector(".det .nm:not([hidden])"))rY();st('Synced from OneDrive at '+tm())}
+async function writeFile(){if(!fh)return;if(saving){dirty=true;return}saving=true;dirty=false;
+ try{const h={'Content-Type':'application/json'};if(etag)h['If-Match']=etag;else h['If-None-Match']='*';
+  const r=await gfetch(G+':/content',{method:'PUT',headers:h,body:JSON.stringify(data)});
+  if(r.status==412||r.status==409){saving=false;dirty=false;alert('Your notes were changed on another device. Loading the latest version from OneDrive. Your last few seconds of edits here may need to be redone.');await load();return}
+  if(!r.ok)throw new Error(r.status);etag=(await r.json()).eTag;st('Saved to OneDrive at '+tm())}
+ catch(e){st('Not saved! Check your connection; will retry',true);dirty=true;setTimeout(()=>{if(dirty&&!saving)writeFile()},5000)}
+ saving=false;if(dirty){dirty=false;writeFile()}}
+function save(){if(!fh)return;dirty=true;clearTimeout(timer);timer=setTimeout(()=>{dirty=false;writeFile()},1000)}
+function ui(){$('signin').hidden=!!acct;$('signout').hidden=$('imp').hidden=!acct}
+$('signin').onclick=()=>pca.loginRedirect({scopes:SCOPES,prompt:'select_account'});
+$('signout').onclick=()=>{if(dirty||saving)return alert('Still saving, try again in a moment.');pca.logoutRedirect({account:acct})};
+$('imp').onclick=()=>$('impf').click();
+$('impf').onchange=async()=>{const f=$('impf').files[0];$('impf').value='';if(!f)return;let d;try{d=norm(JSON.parse(await f.text()))}catch(e){return alert('That file is not a valid notes data file.')}
+ const n=Object.keys(d.notes).length,tn=d.tasks.length,yn=d.yearly.length;
+ if(confirm('Import '+f.name+' ('+n+' note days, '+tn+' tasks, '+yn+' yearly tasks)?\n\nOK = MERGE it with what is already here (keeps both)\nCancel = choose replace or cancel next')){
+  for(const k in d.notes){const a=data.notes[k];data.notes[k]=a&&a!==d.notes[k]?a+'<hr>'+d.notes[k]:d.notes[k]}
+  const key=x=>JSON.stringify([x.text,x.md||'',x.when||'']);const ts=new Set(data.tasks.map(key)),ys=new Set(data.yearly.map(key));
+  d.tasks.forEach(x=>{if(!ts.has(key(x)))data.tasks.push(x)});d.yearly.forEach(x=>{if(!ys.has(key(x)))data.yearly.push(x)});
+ }else if(confirm('REPLACE everything in the app with '+f.name+'? This cannot be undone.')){data=d}else return;
+ showDay();render();rY();clearTimeout(timer);await writeFile()};
+function sync(){if(acct&&document.visibilityState=='visible')load(true).catch(e=>st(e.message,true))}
+document.addEventListener('visibilitychange',sync);window.addEventListener('focus',sync);
+async function boot(){if(!CLIENT_ID||CLIENT_ID.includes('PASTE_')){$('setup').hidden=false;st('Setup needed',true);$('signin').hidden=true;return}
+ pca=new msal.PublicClientApplication({auth:{clientId:CLIENT_ID,authority:'https://login.microsoftonline.com/common',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'localStorage'}});
+ await pca.initialize();const r=await pca.handleRedirectPromise();acct=(r&&r.account)||pca.getAllAccounts()[0]||null;ui();
+ if(acct){st('Loading from OneDrive...');try{await load()}catch(e){st(e.message,true)}}else st('Sign in to load your notes',true)}
+function showDay(){const k=iso(cur);$('day').textContent=cur.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});const v=data.notes[k]||'';$('txt').innerHTML=/<[a-z]/i.test(v)?v:v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');$('next').disabled=k>=iso(new Date())}
+$('txt').oninput=()=>{data.notes[iso(cur)]=$('txt').innerHTML;save()};
+$('txt').onpaste=e=>{const it=[...e.clipboardData.items].find(i=>i.type.startsWith('image/'));
+ if(it){e.preventDefault();const r=new FileReader();r.onload=()=>{document.execCommand('insertHTML',false,'<img src="'+r.result+'"><br>');};r.readAsDataURL(it.getAsFile());return}
+ e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))};
+$('prev').onclick=()=>{cur.setDate(cur.getDate()-1);showDay()};
+$('next').onclick=()=>{cur.setDate(cur.getDate()+1);showDay()};
+$('today').onclick=()=>{cur=new Date();showDay()};
+function tab(n){$('notes').hidden=n!='n';$('tasks').hidden=n!='t';$('yearly').hidden=n!='y';$('tn').classList.toggle('on',n=='n');$('tt').classList.toggle('on',n=='t');$('ty').classList.toggle('on',n=='y')}
+$('tn').onclick=()=>tab('n');$('tt').onclick=()=>tab('t');$('ty').onclick=()=>tab('y');
+function render(){const td=iso(new Date());let ch=false;data.tasks.forEach(x=>{if(x.flag=='yellow'){if(!x.fd){x.fd=td;ch=true}else if(x.fd<td){x.flag='red';x.fd=td;ch=true}}});if(ch&&fh)save();
+ $('list').innerHTML='';$('alist').innerHTML='';let a=0;const rank={red:0,yellow:1};
+ const act=data.tasks.filter(x=>!x.done).sort((p,q)=>(rank[p.flag]??2)-(rank[q.flag]??2));
+ [...act,...data.tasks.filter(x=>x.done)].forEach(x=>{const li=document.createElement('li'),d=document.createElement('span');d.className='dot';d.title=x.done?'Restore':'Archive';
+ d.onclick=()=>{x.done=!x.done;x.when=iso(new Date());save();render()};
+ const f=document.createElement('span');f.className='flag '+(x.flag||'none');f.textContent='\u2691';f.title='Click: no flag, yellow (by tomorrow), red (today)';
+ f.onclick=()=>{x.flag=x.flag==null||x.flag=='none'?'yellow':x.flag=='yellow'?'red':'none';x.fd=iso(new Date());save();render()};
+ if(x.flag=='red')li.classList.add('red');if(x.flag=='yellow')li.classList.add('yel');
+ const s=document.createElement('small');s.textContent=x.when||'';li.append(d,f,x.text,s);
+ (x.done?(a++,$('alist')):$('list')).append(li)});$('ac').textContent=a}
+function add(){const v=$('newt').value.trim();if(!v)return;data.tasks.unshift({text:v,done:false,when:iso(new Date())});$('newt').value='';save();render()}
+$('addb').onclick=add;$('newt').onkeydown=e=>{if(e.key=='Enter')add()};
+setInterval(()=>{render();if(!document.querySelector(".det .nm:not([hidden])"))rY();if(iso(cur)!==iso(new Date())&&$('next').disabled){cur=new Date();showDay()}},60000);
+
+const openY=new Set();let cm=new Date();cm.setDate(1);
+function ydue(y,yr){return yr+'-'+y.md}
+function rY(){data.yearly=data.yearly||[];const L=$('ylist');L.innerHTML='';const now=new Date(),yr=now.getFullYear(),td=iso(now);
+ const soon=iso(new Date(now.getTime()+14*864e5));
+ data.yearly.forEach(y=>{if(y.start==null){y.start=(ydue(y,yr)<td&&!(y.doneYears||[]).includes(yr))?yr+1:yr;if(fh)save()}});
+ const items=data.yearly.map(y=>{const fut=(y.start||0)>yr;return {y,fut,done:!fut&&(y.doneYears||[]).includes(yr),due:ydue(y,fut?y.start:yr)}});
+ items.sort((a,b)=>(a.done-b.done)||a.due.localeCompare(b.due));
+ items.forEach(({y,fut,done,due})=>{const li=document.createElement('li'),d=document.createElement('span');d.className='dot';d.title=done?'Undo (not done this year)':'Mark done for '+yr;
+  d.onclick=()=>{y.doneYears=y.doneYears||[];done?y.doneYears=y.doneYears.filter(v=>v!=yr):y.doneYears.push(yr);save();rY()};
+  if(done)li.classList.add('ydone');else if(fut);else if(due<td)li.classList.add('yover');else if(due<=soon)li.classList.add('ysoon');
+  const s=document.createElement('small');const dt=new Date(due+'T12:00');s.textContent=(done?'Done for '+yr+' \u00b7 next ':fut?'Starts ':due<td?'Overdue \u00b7 ':'Due ')+dt.toLocaleDateString(undefined,{month:'short',day:'numeric'})+(fut?', '+y.start:'');
+  const x=document.createElement('span');x.className='x';x.textContent='\u2715';x.title='Remove this yearly task';x.onclick=()=>{if(confirm('Remove "'+y.text+'" for good?')){data.yearly=data.yearly.filter(z=>z!==y);save();rY()}};
+  const tx=document.createElement('span');tx.className='yt';tx.textContent=y.text+(y.det?' \ud83d\udcdd':'');tx.title='Click for details';
+  const box=document.createElement('div');box.className='det';box.hidden=!openY.has(y);
+  tx.onclick=()=>{openY.has(y)?openY.delete(y):openY.add(y);rY()};
+  const view=document.createElement('div');view.className='dv';const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  view.innerHTML=y.det?esc(y.det).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank">$1</a>'):'<i>No details yet.</i>';
+  const ta=document.createElement('textarea');ta.value=y.det||'';ta.hidden=true;ta.placeholder='Instructions, links, file locations...';
+  const nm=document.createElement('input');nm.className='nm';nm.value=y.text;nm.hidden=true;nm.placeholder='Task name';
+  const dd=document.createElement('input');dd.type='date';dd.className='nm';dd.hidden=true;dd.value=new Date().getFullYear()+'-'+y.md;
+  const eb=document.createElement('button');eb.className='b';eb.textContent='Edit';
+  eb.onclick=()=>{if(ta.hidden){ta.hidden=nm.hidden=dd.hidden=false;view.hidden=true;eb.textContent='Done';nm.focus()}else{if(nm.value.trim())y.text=nm.value.trim();if(dd.value&&dd.value.slice(5)!=y.md){y.md=dd.value.slice(5);const ny=new Date().getFullYear();y.start=(ny+'-'+y.md)<iso(new Date())&&!(y.doneYears||[]).includes(ny)?ny+1:ny}y.det=ta.value;save();rY()}};
+  ta.oninput=()=>{y.det=ta.value;save()};
+  box.append(nm,dd,view,ta,eb);li.append(d,tx,s,x,box);L.append(li)});rCal()}
+function rCal(){const g=$('cgrid');g.innerHTML='';const yr=cm.getFullYear(),m=cm.getMonth(),td=iso(new Date());
+ $('cmon').textContent=cm.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ 'Sun Mon Tue Wed Thu Fri Sat'.split(' ').forEach(t=>{const e=document.createElement('div');e.className='dh';e.textContent=t;g.append(e)});
+ for(let i=0;i<cm.getDay();i++)g.append(document.createElement('div'));
+ const nd=new Date(yr,m+1,0).getDate();
+ for(let d=1;d<=nd;d++){const c=document.createElement('div'),k=iso(new Date(yr,m,d));if(k==td)c.className='td';c.innerHTML='<span class="n">'+d+'</span>';
+  (data.yearly||[]).filter(y=>y.md==k.slice(5)&&(y.start||0)<=yr).forEach(y=>{const e=document.createElement('div');e.className='ev';const dn=(y.doneYears||[]).includes(yr);if(dn)e.classList.add('d');else if(k<td)e.classList.add('o');e.textContent=y.text;e.title=y.text;c.append(e)});
+  g.append(c)}}
+$('cprev').onclick=()=>{cm.setMonth(cm.getMonth()-1);rCal()};$('cnext').onclick=()=>{cm.setMonth(cm.getMonth()+1);rCal()};
+function yadd(){const t=$('ytext').value.trim(),d=$('ydate').value;if(!t||!d)return alert('Enter a task and a due date.');data.yearly=data.yearly||[];const ny=new Date().getFullYear();data.yearly.push({text:t,md:d.slice(5),doneYears:[],start:(ny+'-'+d.slice(5))<iso(new Date())?ny+1:ny});$('ytext').value='';$('ydate').value='';save();rY()}
+$('yadd').onclick=yadd;$('ytext').onkeydown=e=>{if(e.key=='Enter')yadd()};
+
+document.querySelectorAll('#tb button').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>{if($('txt').contentEditable!=='true')return;$('txt').focus();
+ const c=b.dataset.c,v=b.dataset.v;document.execCommand('styleWithCSS',false,c=='hl'||c=='foreColor');
+ if(c=='hl')document.execCommand('hiliteColor',false,v);else document.execCommand(c,false,v||null);
+ data.notes[iso(cur)]=$('txt').innerHTML;save()}});
+function lock(on){$('txt').contentEditable=!on;$('newt').disabled=on;$('addb').disabled=on;$('yadd').disabled=on;$('ytext').disabled=on;if(on)$('txt').dataset.ph='Sign in with Microsoft above to load your notes.';else $('txt').dataset.ph="Today's work notes... (paste screenshots with Ctrl+V)"}
+lock(true);showDay();render();rY();boot().catch(e=>st('Sign-in error: '+e.message,true));
+</script></body></html>
