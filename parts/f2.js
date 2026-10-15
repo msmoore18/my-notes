@@ -4,7 +4,7 @@ async function cleanupImgs(){const td=iso(new Date());if(cleaning||!fh||!acct&&!
  try{let url='https://graph.microsoft.com/v1.0/me/drive/special/approot:/images:/children?$select=name,file&$top=200',files=[];
   while(url){const r=await gfetch(url);if(r.status==404){files=[];break}if(!r.ok)return;const j=await r.json();(j.value||[]).forEach(f=>{if(f.file&&f.name&&!f.name.includes('/'))files.push('images/'+f.name)});url=j['@odata.nextLink']||null}
   if(saving||dirty)return;
-  const refs=new Set(),txt=JSON.stringify({n:data.notes,t:data.tasks,y:data.yearly})+($('txt')?$('txt').innerHTML:'');
+  const refs=new Set(),txt=JSON.stringify({n:data.notes,t:data.tasks,y:data.yearly,b:data.notebooks})+($('txt')?$('txt').innerHTML:'')+($('nbtxt')?$('nbtxt').innerHTML:'');
   (txt.match(/images\/[A-Za-z0-9_.\-]+/g)||[]).forEach(p=>refs.add(p));
   const orph=data.orphans=data.orphans||{},listed=new Set(files);let ch=false;
   for(const p in orph)if(!listed.has(p)||refs.has(p)){delete orph[p];ch=true}
@@ -20,7 +20,7 @@ function viewImg(src){const o=document.createElement('div');o.id='imgview';const
 function placeBar(){if(!selImg||!selImg.isConnected)return deselImg();const r=selImg.getBoundingClientRect();bar.style.top=(scrollY+Math.max(r.top,0)+4)+'px';bar.style.left=(scrollX+r.left+4)+'px';hdl.style.top=(scrollY+r.bottom-9)+'px';hdl.style.left=(scrollX+r.right-9)+'px'}
 function selectImg(im){deselImg();selImg=im;im.classList.add('imgsel');bar.hidden=hdl.hidden=false;placeBar()}
 function deselImg(){if(selImg)selImg.classList.remove('imgsel');selImg=null;bar.hidden=hdl.hidden=true}
-function commitImg(){data.notes[iso(cur)]=noteHTML();save();placeBar()}
+function commitImg(){if(typeof saveActive==='function')saveActive();else{data.notes[iso(cur)]=noteHTML();save()}placeBar();deselImg()}
 bar.onmousedown=e=>e.preventDefault();
 bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg();deselImg()};
 hdl.onpointerdown=e=>{if(!selImg)return;e.preventDefault();hdl.setPointerCapture(e.pointerId);const cw=$('txt').clientWidth-28,l=selImg.getBoundingClientRect().left;
