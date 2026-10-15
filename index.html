@@ -59,6 +59,9 @@ li.red{border-left:5px solid #d33;background:#fff5f5}li.yel{border-left:5px soli
 @media (max-width:700px){#srch{max-width:none;width:100%;order:5;margin:6px 0}}
 #txt img{cursor:zoom-in;min-height:40px;min-width:60px;background:#f3f3f3}#txt img.imgup{opacity:.5}#txt img.imgload,#txt img.imgup{background:#eee url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='14' fill='none' stroke='%233b6' stroke-width='4' stroke-dasharray='60 30'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 20 20' to='360 20 20' dur='1s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") center/32px no-repeat;min-height:80px;min-width:120px}
 #imgview{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out}#imgview img{max-width:96vw;max-height:96vh}
+#txt img{height:auto}#txt img.imgsel{outline:3px solid #3b6;outline-offset:2px}#txt img{cursor:pointer}
+#imgbar{position:absolute;z-index:50;display:flex;flex-wrap:wrap;gap:2px;background:#fff;border:1px solid #ccc;border-radius:8px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.2)}#imgbar button{border:0;background:none;padding:6px 8px;font-size:13px;border-radius:5px;cursor:pointer}#imgbar button:hover{background:#eef9f0}
+#imghdl{position:absolute;z-index:50;width:18px;height:18px;background:#3b6;border:2px solid #fff;border-radius:4px;cursor:nwse-resize;touch-action:none}
 </style></head><body>
 <nav><button class="t on" id="tn">Daily Notes</button><button class="t" id="tt">Tasks</button><button class="t" id="ty">Yearly Tasks</button>
 <div id="srch"><input id="sq" type="search" placeholder="Search..." autocomplete="off"><span id="sx" title="Clear" hidden>✕</span></div><div id="file"><span id="status" class="warn">Not signed in</span>
@@ -129,7 +132,7 @@ async function load(quiet){if(!acct||saving||dirty)return;
  const m=await r.json();if(quiet&&m.eTag===etag)return;
  const c=await gfetch(G+':/content');if(!c.ok)throw new Error('Load failed ('+c.status+')');
  const t=await c.text();if(saving||dirty)return;data=norm(t.trim()?JSON.parse(t):{});etag=m.eTag;fh=true;lock(false);
- const ae=document.activeElement;const editing=ae&&ae.id=='txt';if(!editing)showDay();render();if(!document.querySelector(".det .nm:not([hidden])"))rY();st('Synced from OneDrive at '+tm());migrateImgs()}
+ const ae=document.activeElement;const editing=ae&&ae.id=='txt';if(!editing)showDay();render();if(!document.querySelector(".det .nm:not([hidden])"))rY();st('Synced from OneDrive at '+tm());migrateImgs().then(()=>setTimeout(cleanupImgs,3000))}
 async function writeFile(){if(!fh)return;if(saving){dirty=true;return}saving=true;dirty=false;
  try{const h={'Content-Type':'application/json'};if(etag)h['If-Match']=etag;else h['If-None-Match']='*';
   const r=await gfetch(G+':/content',{method:'PUT',headers:h,body:JSON.stringify(data)});
@@ -156,13 +159,13 @@ async function boot(){if(!CLIENT_ID||CLIENT_ID.includes('PASTE'+'_')){$('setup')
  pca=new msal.PublicClientApplication({auth:{clientId:CLIENT_ID,authority:'https://login.microsoftonline.com/2ca98f21-b5df-4a61-ab07-86f96837c4f3',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'localStorage'}});
  await pca.initialize();const r=await pca.handleRedirectPromise();acct=(r&&r.account)||pca.getAllAccounts()[0]||null;ui();
  if(acct){st('Loading from OneDrive...');try{await load()}catch(e){st(e.message,true)}}else st('Sign in to load your notes',true)}
-function showDay(){const k=iso(cur);$('day').textContent=cur.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});const v=data.notes[k]||'';$('txt').innerHTML=/<[a-z]/i.test(v)?v:v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');$('next').disabled=k>=iso(new Date());hydrate($('txt'))}
+function showDay(){const k=iso(cur);$('day').textContent=cur.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});const v=data.notes[k]||'';$('txt').innerHTML=/<[a-z]/i.test(v)?v:v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');$('next').disabled=k>=iso(new Date());hydrate($('txt'));if(typeof deselImg=='function')deselImg()}
 // ===== Images stored as separate files in the OneDrive app folder =====
 const imgCache=new Map(); // path -> Promise<blob url>
 const GI=p=>'https://graph.microsoft.com/v1.0/me/drive/special/approot:/'+p.split('/').map(encodeURIComponent).join('/')+':/content';
 function getImg(p){if(!imgCache.has(p))imgCache.set(p,gfetch(GI(p)).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()}).then(b=>URL.createObjectURL(b)).catch(e=>{imgCache.delete(p);throw e}));return imgCache.get(p)}
 function hydrate(root){root.querySelectorAll('img[data-od]').forEach(im=>{if(im.getAttribute('src'))return;im.classList.add('imgload');getImg(im.dataset.od).then(u=>{im.src=u;im.classList.remove('imgload')}).catch(()=>{im.classList.remove('imgload');im.alt='(image could not be loaded: '+im.dataset.od+')'})})}
-function noteHTML(){const c=$('txt').cloneNode(true);c.querySelectorAll('img').forEach(im=>{if(im.dataset.pending)return im.remove();if(im.dataset.od){im.removeAttribute('src');im.classList.remove('imgload');if(!im.className)im.removeAttribute('class');im.removeAttribute('alt')}else if(/^blob:/.test(im.getAttribute('src')||''))im.remove()});return c.innerHTML}
+function noteHTML(){const c=$('txt').cloneNode(true);c.querySelectorAll('img').forEach(im=>{im.classList.remove('imgsel');if(!im.className)im.removeAttribute('class');if(im.dataset.pending)return im.remove();if(im.dataset.od){im.removeAttribute('src');im.classList.remove('imgload');if(!im.className)im.removeAttribute('class');im.removeAttribute('alt')}else if(/^blob:/.test(im.getAttribute('src')||''))im.remove()});return c.innerHTML}
 function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return iso(d)+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'_'+Math.random().toString(36).slice(2,8)}
 async function uploadImg(blob){const ext=((blob.type||'image/png').split('/')[1]||'png').replace('jpeg','jpg').replace(/[^a-z0-9]/g,'');const p='images/'+stamp()+'.'+ext;
  const r=await gfetch(GI(p),{method:'PUT',headers:{'Content-Type':blob.type||'image/png'},body:blob});if(!r.ok)throw new Error('Upload failed ('+r.status+')');imgCache.set(p,Promise.resolve(URL.createObjectURL(blob)));return p}
@@ -182,8 +185,40 @@ async function migrateImgs(){if(migrating)return;migrating=true;let changed=fals
   for(const im of d.querySelectorAll('img[src^="data:"]')){try{const b=await (await fetch(im.getAttribute('src'))).blob();const p=await uploadImg(b);im.removeAttribute('src');im.dataset.od=p;ch=true}catch(e){failed++}}
   if(ch&&data.notes[k]===v){data.notes[k]=d.innerHTML;changed=true;if(k===iso(cur)&&document.activeElement!==$('txt'))showDay()}}
  if(changed)save();if(failed)st(failed+' old image(s) could not be moved to OneDrive; kept inside notes',true)}finally{migrating=false}}
-$('txt').addEventListener('click',e=>{if(e.target.tagName!=='IMG'||!e.target.src)return;const o=document.createElement('div');o.id='imgview';const i=document.createElement('img');i.src=e.target.src;o.append(i);o.onclick=()=>o.remove();document.body.append(o)});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('imgview'))$('imgview').remove()});
+// ===== Orphan image cleanup (30-day grace) =====
+let cleaning=false;
+async function cleanupImgs(){const td=iso(new Date());if(cleaning||!fh||!acct&&!window.__test||saving||dirty||migrating||data.lastCleanup===td)return;cleaning=true;
+ try{let url='https://graph.microsoft.com/v1.0/me/drive/special/approot:/images:/children?$select=name,file&$top=200',files=[];
+  while(url){const r=await gfetch(url);if(r.status==404){files=[];break}if(!r.ok)return;const j=await r.json();(j.value||[]).forEach(f=>{if(f.file&&f.name&&!f.name.includes('/'))files.push('images/'+f.name)});url=j['@odata.nextLink']||null}
+  if(saving||dirty)return;
+  const refs=new Set(),txt=JSON.stringify({n:data.notes,t:data.tasks,y:data.yearly})+($('txt')?$('txt').innerHTML:'');
+  (txt.match(/images\/[A-Za-z0-9_.\-]+/g)||[]).forEach(p=>refs.add(p));
+  const orph=data.orphans=data.orphans||{},listed=new Set(files);let ch=false;
+  for(const p in orph)if(!listed.has(p)||refs.has(p)){delete orph[p];ch=true}
+  for(const p of files){if(refs.has(p)||!/^images\/[^\/]+$/.test(p))continue;
+   if(!orph[p]){orph[p]=td;ch=true;continue}
+   if((new Date(td+'T12:00')-new Date(orph[p]+'T12:00'))/864e5>=30){const r=await gfetch(GI(p),{method:'DELETE'});if(r.ok||r.status==404){delete orph[p];imgCache.delete(p);ch=true}}}
+  data.lastCleanup=td;save()}catch(e){}finally{cleaning=false}}
+// ===== Image select / resize =====
+let selImg=null;const bar=document.createElement('div');bar.id='imgbar';bar.hidden=true;
+bar.innerHTML='<button data-w="25">Small</button><button data-w="50">Medium</button><button data-w="75">Large</button><button data-w="100">Full</button><button data-w="open">Open full size</button>';
+const hdl=document.createElement('div');hdl.id='imghdl';hdl.hidden=true;document.body.append(bar,hdl);
+function viewImg(src){const o=document.createElement('div');o.id='imgview';const i=document.createElement('img');i.src=src;o.append(i);o.onclick=()=>o.remove();document.body.append(o)}
+function placeBar(){if(!selImg||!selImg.isConnected)return deselImg();const r=selImg.getBoundingClientRect();bar.style.top=(scrollY+Math.max(r.top,0)+4)+'px';bar.style.left=(scrollX+r.left+4)+'px';hdl.style.top=(scrollY+r.bottom-9)+'px';hdl.style.left=(scrollX+r.right-9)+'px'}
+function selectImg(im){deselImg();selImg=im;im.classList.add('imgsel');bar.hidden=hdl.hidden=false;placeBar()}
+function deselImg(){if(selImg)selImg.classList.remove('imgsel');selImg=null;bar.hidden=hdl.hidden=true}
+function commitImg(){data.notes[iso(cur)]=noteHTML();save();placeBar()}
+bar.onmousedown=e=>e.preventDefault();
+bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg()};
+hdl.onpointerdown=e=>{if(!selImg)return;e.preventDefault();hdl.setPointerCapture(e.pointerId);const cw=$('txt').clientWidth-28,l=selImg.getBoundingClientRect().left;
+ hdl.onpointermove=m=>{selImg.style.width=Math.round(Math.min(100,Math.max(5,(m.clientX-l)/cw*100)))+'%';placeBar()};
+ hdl.onpointerup=()=>{hdl.onpointermove=hdl.onpointerup=null;commitImg()}};
+$('txt').addEventListener('click',e=>{if(e.target.tagName==='IMG')selectImg(e.target);else deselImg()});
+$('txt').addEventListener('dblclick',e=>{if(e.target.tagName==='IMG'&&e.target.src)viewImg(e.target.src)});
+document.addEventListener('mousedown',e=>{if(selImg&&!$('txt').contains(e.target)&&!bar.contains(e.target)&&e.target!==hdl)deselImg()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('imgview'))$('imgview').remove();else deselImg()}});
+window.addEventListener('resize',placeBar);$('txt').addEventListener('input',placeBar);
+
 $('txt').oninput=()=>{data.notes[iso(cur)]=noteHTML();save()};
 $('txt').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Enter')return;const s=getSelection();if(!s.rangeCount||!s.isCollapsed)return;
  const n=s.anchorNode;if(!n||n.nodeType!==3)return;const before=n.textContent.slice(0,s.anchorOffset);
