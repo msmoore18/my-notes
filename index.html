@@ -104,7 +104,7 @@ li.red{border-left:5px solid #d33;background:#fff5f5}li.yel{border-left:5px soli
 <script src="msal-browser.min.js"></script>
 <script>
 // ===== SETUP: paste your Application (client) ID from the Azure portal here =====
-const CLIENT_ID = 'PASTE_CLIENT_ID_HERE';
+const CLIENT_ID = '571500df-092a-4771-985e-39799590e952';
 // ===============================================================================
 
 const $=id=>document.getElementById(id);
@@ -150,8 +150,8 @@ $('impf').onchange=async()=>{const f=$('impf').files[0];$('impf').value='';if(!f
  showDay();render();rY();clearTimeout(timer);await writeFile()};
 function sync(){if(acct&&document.visibilityState=='visible')load(true).catch(e=>st(e.message,true))}
 document.addEventListener('visibilitychange',sync);window.addEventListener('focus',sync);
-async function boot(){if(!CLIENT_ID||CLIENT_ID.includes('PASTE_')){$('setup').hidden=false;st('Setup needed',true);$('signin').hidden=true;return}
- pca=new msal.PublicClientApplication({auth:{clientId:CLIENT_ID,authority:'https://login.microsoftonline.com/common',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'localStorage'}});
+async function boot(){if(!CLIENT_ID||CLIENT_ID.includes('PASTE'+'_')){$('setup').hidden=false;st('Setup needed',true);$('signin').hidden=true;return}
+ pca=new msal.PublicClientApplication({auth:{clientId:CLIENT_ID,authority:'https://login.microsoftonline.com/2ca98f21-b5df-4a61-ab07-86f96837c4f3',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'localStorage'}});
  await pca.initialize();const r=await pca.handleRedirectPromise();acct=(r&&r.account)||pca.getAllAccounts()[0]||null;ui();
  if(acct){st('Loading from OneDrive...');try{await load()}catch(e){st(e.message,true)}}else st('Sign in to load your notes',true)}
 function showDay(){const k=iso(cur);$('day').textContent=cur.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});const v=data.notes[k]||'';$('txt').innerHTML=/<[a-z]/i.test(v)?v:v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');$('next').disabled=k>=iso(new Date())}
