@@ -22,7 +22,7 @@ function selectImg(im){deselImg();selImg=im;im.classList.add('imgsel');bar.hidde
 function deselImg(){if(selImg)selImg.classList.remove('imgsel');selImg=null;bar.hidden=hdl.hidden=true}
 function commitImg(){data.notes[iso(cur)]=noteHTML();save();placeBar()}
 bar.onmousedown=e=>e.preventDefault();
-bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg()};
+bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg();deselImg()};
 hdl.onpointerdown=e=>{if(!selImg)return;e.preventDefault();hdl.setPointerCapture(e.pointerId);const cw=$('txt').clientWidth-28,l=selImg.getBoundingClientRect().left;
  hdl.onpointermove=m=>{selImg.style.width=Math.round(Math.min(100,Math.max(5,(m.clientX-l)/cw*100)))+'%';placeBar()};
  hdl.onpointerup=()=>{hdl.onpointermove=hdl.onpointerup=null;commitImg()}};

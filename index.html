@@ -60,6 +60,7 @@ li.red{border-left:5px solid #d33;background:#fff5f5}li.yel{border-left:5px soli
 #txt img{cursor:zoom-in;min-height:40px;min-width:60px;background:#f3f3f3}#txt img.imgup{opacity:.5}#txt img.imgload,#txt img.imgup{background:#eee url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='14' fill='none' stroke='%233b6' stroke-width='4' stroke-dasharray='60 30'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 20 20' to='360 20 20' dur='1s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") center/32px no-repeat;min-height:80px;min-width:120px}
 #imgview{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:99;cursor:zoom-out}#imgview img{max-width:96vw;max-height:96vh}
 #txt img{height:auto}#txt img.imgsel{outline:3px solid #3b6;outline-offset:2px}#txt img{cursor:pointer}
+#imgbar[hidden],#imghdl[hidden]{display:none!important}
 #imgbar{position:absolute;z-index:50;display:flex;flex-wrap:wrap;gap:2px;background:#fff;border:1px solid #ccc;border-radius:8px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.2)}#imgbar button{border:0;background:none;padding:6px 8px;font-size:13px;border-radius:5px;cursor:pointer}#imgbar button:hover{background:#eef9f0}
 #imghdl{position:absolute;z-index:50;width:18px;height:18px;background:#3b6;border:2px solid #fff;border-radius:4px;cursor:nwse-resize;touch-action:none}
 </style></head><body>
@@ -209,7 +210,7 @@ function selectImg(im){deselImg();selImg=im;im.classList.add('imgsel');bar.hidde
 function deselImg(){if(selImg)selImg.classList.remove('imgsel');selImg=null;bar.hidden=hdl.hidden=true}
 function commitImg(){data.notes[iso(cur)]=noteHTML();save();placeBar()}
 bar.onmousedown=e=>e.preventDefault();
-bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg()};
+bar.onclick=e=>{const w=e.target.dataset.w;if(!w||!selImg)return;if(w=='open'){if(selImg.src)viewImg(selImg.src);return}selImg.style.width=w+'%';commitImg();deselImg()};
 hdl.onpointerdown=e=>{if(!selImg)return;e.preventDefault();hdl.setPointerCapture(e.pointerId);const cw=$('txt').clientWidth-28,l=selImg.getBoundingClientRect().left;
  hdl.onpointermove=m=>{selImg.style.width=Math.round(Math.min(100,Math.max(5,(m.clientX-l)/cw*100)))+'%';placeBar()};
  hdl.onpointerup=()=>{hdl.onpointermove=hdl.onpointerup=null;commitImg()}};
