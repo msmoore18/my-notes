@@ -1,26 +1,26 @@
-// ===== Personal task lists =====
-function ensureP(){data.plists=data.plists||[];data.personal=data.personal||[];
- if(!data.plists.length)data.plists.push({id:'general',name:'General'});
- const ids=new Set(data.plists.map(l=>l.id));let ch=false;
- data.personal.forEach(x=>{if(!x.list||!ids.has(x.list)){x.list=data.plists[0].id;ch=true}});if(ch&&fh)save()}
-function curP(){ensureP();let c=null;try{c=localStorage.getItem('nt_plist')}catch(e){}
- return data.plists.some(l=>l.id===c)?c:data.plists[0].id}
-function setP(id){try{localStorage.setItem('nt_plist',id)}catch(e){}}
-function rPP(){ensureP();const c=curP(),W=$('ppills');W.innerHTML='';
- data.plists.forEach(l=>{const b=document.createElement('button');b.className='pill'+(l.id===c?' on':'');b.textContent=l.name;
-  const n=data.personal.filter(x=>x.list===l.id&&!x.done).length;if(n){const s=document.createElement('span');s.className='gm';s.textContent=n;b.append(s)}
-  b.onclick=()=>{setP(l.id);render()};W.append(b)});
- const nb=document.createElement('button');nb.className='pill new';nb.textContent='+ New list';nb.disabled=!fh;
- nb.onclick=()=>{const v=(prompt('Name for the new list (e.g. Packing, House):')||'').trim();if(!v)return;
-  if(data.plists.some(l=>l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');
-  const id='l'+Date.now().toString(36);data.plists.push({id,name:v});setP(id);save();render()};W.append(nb);
- const cl=data.plists.find(l=>l.id===c);
- const rn=document.createElement('button');rn.className='pill';rn.textContent='Rename';rn.disabled=!fh;
- rn.onclick=()=>{const v=(prompt('Rename list "'+cl.name+'" to:',cl.name)||'').trim();if(!v||v===cl.name)return;
-  if(data.plists.some(l=>l!==cl&&l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');cl.name=v;save();render()};
- const dl=document.createElement('button');dl.className='pill';dl.textContent='Delete';dl.disabled=!fh;
- dl.onclick=()=>{if(data.plists.length<2)return alert('You need at least one list. Rename this one instead.');
-  const n=data.personal.filter(x=>x.list===cl.id).length;
+// ===== Named task lists (Work + Personal) =====
+const LC={personal:{L:'plists',S:'nt_plist',W:'ppills',N:'pname'},tasks:{L:'tlists',S:'nt_tlist',W:'tpills',N:'tname'}};
+function ensureL(K){const c=LC[K];data[c.L]=data[c.L]||[];data[K]=data[K]||[];const ls=data[c.L];
+ if(!ls.length)ls.push({id:'general',name:'General'});
+ const ids=new Set(ls.map(l=>l.id));let ch=false;
+ data[K].forEach(x=>{if(!x.list||!ids.has(x.list)){x.list=ls[0].id;ch=true}});if(ch&&fh)save();return ls}
+function curL(K){const ls=ensureL(K);let c=null;try{c=localStorage.getItem(LC[K].S)}catch(e){}
+ return ls.some(l=>l.id===c)?c:ls[0].id}
+function setL(K,id){try{localStorage.setItem(LC[K].S,id)}catch(e){}}
+function listName(K,x){const l=(data[(LC[K]||{}).L]||[]).find(l=>l.id===x.list);return l?l.name:''}
+function rLP(K){const C=LC[K],ls=ensureL(K),c=curL(K),W=$(C.W);W.innerHTML='';
+ ls.forEach(l=>{const b=document.createElement('button');b.className='pill'+(l.id===c?' on':'');b.textContent=l.name;
+  const n=data[K].filter(x=>x.list===l.id&&!x.done).length;if(n){const s=document.createElement('span');s.className='gm';s.textContent=n;b.append(s)}
+  b.onclick=()=>{setL(K,l.id);render()};W.append(b)});
+ const mk=(t,f)=>{const b=document.createElement('button');b.className='pill'+(t[0]=='+'?' new':'');b.textContent=t;b.disabled=!fh;b.dataset.act=1;b.onclick=f;W.append(b)};
+ const cl=ls.find(l=>l.id===c);
+ mk('+ New list',()=>{const v=(prompt('Name for the new list:')||'').trim();if(!v)return;
+  if(ls.some(l=>l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');
+  const id='l'+Date.now().toString(36);ls.push({id,name:v});setL(K,id);save();render()});
+ mk('Rename',()=>{const v=(prompt('Rename list "'+cl.name+'" to:',cl.name)||'').trim();if(!v||v===cl.name)return;
+  if(ls.some(l=>l!==cl&&l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');cl.name=v;save();render()});
+ mk('Delete',()=>{if(ls.length<2)return alert('You need at least one list. Rename this one instead.');
+  const n=data[K].filter(x=>x.list===cl.id).length;
   if(!confirm('Delete the list "'+cl.name+'"'+(n?' and its '+n+' task'+(n>1?'s':'')+' (including archived)':'')+'? This cannot be undone.'))return;
-  data.personal=data.personal.filter(x=>x.list!==cl.id);data.plists=data.plists.filter(l=>l!==cl);setP(data.plists[0].id);save();render()};
- W.append(rn,dl);$('pname').textContent=cl.name}
+  data[K]=data[K].filter(x=>x.list!==cl.id);data[C.L]=ls.filter(l=>l!==cl);setL(K,data[C.L][0].id);save();render()});
+ $(C.N).textContent=cl.name}

@@ -1,0 +1,35 @@
+<section id="books" hidden>
+<div id="nbwrap">
+<aside id="nbside"><div class="nbhdr"><strong>Notebooks</strong><button class="b" id="nbnew" title="New notebook">+</button></div><div id="nblist"></div></aside>
+<div id="nbmain">
+<div class="nbhdr"><strong id="nbname"></strong><button class="b" id="pgnew">+ New page</button></div>
+<div id="pglist"></div>
+<p id="pgempty" class="muted" hidden>Select or create a notebook.</p>
+<div id="nbpage" hidden>
+<input id="nbtitle" class="nbtitle" placeholder="Page title">
+<div id="ntb">
+<button data-c="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+<button data-c="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+<button data-c="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+<button data-c="strikeThrough" title="Strikethrough"><s>S</s></button>
+<span class="sep"></span>
+<button data-c="hl" data-v="#fff176" title="Yellow highlight"><span class="sw" style="background:#fff176"></span></button>
+<button data-c="hl" data-v="#a5f3a1" title="Green highlight"><span class="sw" style="background:#a5f3a1"></span></button>
+<button data-c="hl" data-v="#ffb3b3" title="Red highlight"><span class="sw" style="background:#ffb3b3"></span></button>
+<button data-c="hl" data-v="transparent" title="Remove highlight"><span class="sw" style="background:#fff;border:1px dashed #999"></span></button>
+<button data-c="foreColor" data-v="#d33" title="Red text"><span style="color:#d33;font-weight:700">A</span></button>
+<span class="sep"></span>
+<button data-c="formatBlock" data-v="H3" title="Heading">H</button>
+<button data-c="formatBlock" data-v="DIV" title="Normal text">T</button>
+<button data-c="insertUnorderedList" title="Bullets">&bull; List</button>
+<button data-c="insertOrderedList" title="Numbered list">1. List</button>
+<button data-c="indent" title="Indent">&rarr;</button>
+<button data-c="outdent" title="Outdent">&larr;</button>
+<span class="sep"></span>
+<button data-c="removeFormat" title="Clear formatting">Clear</button>
+</div>
+<div id="nbtxt" contenteditable="true" data-ph="Write here... (paste screenshots with Ctrl+V)"></div>
+</div>
+</div>
+</div>
+</section>
