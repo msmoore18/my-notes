@@ -82,6 +82,7 @@ nav .sm{display:none}@media (max-width:560px){nav .lg{display:none}nav .sm{displ
 .muted{color:#999}
 @media (max-width:700px){#nbwrap{flex-direction:column}#nbside{width:auto}#nblist,#pglist{display:flex;flex-wrap:wrap;gap:6px}.nbitem,.pgitem{width:auto;flex:1;min-width:120px}}
 
+#ppills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}#ppills .pill:disabled{opacity:.5}
 </style></head><body>
 <nav><button class="t on" id="tt"><span class="lg">Work Tasks</span><span class="sm">Work</span></button><button class="t" id="tp"><span class="lg">Personal Tasks</span><span class="sm">Personal</span></button><button class="t" id="ty"><span class="lg">Yearly Tasks</span><span class="sm">Yearly</span></button><button class="t" id="tn"><span class="lg">Daily Notes</span><span class="sm">Notes</span></button><button class="t" id="tbk"><span class="lg">Notebooks</span><span class="sm">Books</span></button>
 <div id="srch"><input id="sq" type="search" placeholder="Search..." autocomplete="off"><span id="sx" title="Clear" hidden>✕</span></div><div id="file"><span id="status" class="warn">Not signed in</span>
@@ -120,6 +121,8 @@ nav .sm{display:none}@media (max-width:560px){nav .lg{display:none}nav .sm{displ
 <details><summary>Archived (<span id="ac">0</span>)</summary><ul id="alist" class="arch"></ul></details>
 </section>
 <section id="personal" hidden>
+<div id="ppills"></div>
+<h3 class="sec" style="margin-top:0" id="pname"></h3>
 <div class="add"><input id="pnewt" placeholder="New personal task, press Enter"><button class="b" id="paddb">Add</button></div>
 <ul id="plist"></ul>
 <details><summary>Archived (<span id="pac">0</span>)</summary><ul id="palist" class="arch"></ul></details>
@@ -303,16 +306,44 @@ function tab(n){if(lastTab==='bk'&&n!=='bk'&&typeof saveNbPage==='function'&&typ
 $('tn').onclick=()=>tab('n');$('tt').onclick=()=>tab('t');$('tp').onclick=()=>tab('p');$('ty').onclick=()=>tab('y');$('tbk').onclick=()=>tab('bk');
 function renderList(K,P){data[K]=data[K]||[];const td=iso(new Date());let ch=false;data[K].forEach(x=>{if(x.flag=='yellow'){if(!x.fd){x.fd=td;ch=true}else if(x.fd<td){x.flag='red';x.fd=td;ch=true}}});if(ch&&fh)save();
  $(P+'list').innerHTML='';$(P+'alist').innerHTML='';let a=0;const rank={red:0,yellow:1};
- const act=data[K].filter(x=>!x.done).sort((p,q)=>(rank[p.flag]??2)-(rank[q.flag]??2));
- [...act,...data[K].filter(x=>x.done)].forEach(x=>{const li=document.createElement('li'),d=document.createElement('span');d.className='dot';d.title=x.done?'Restore':'Archive';
+ const F=K=='personal'?(ensureP(),(c=>x=>x.list===c)(curP())):()=>true;if(K=='personal')rPP();
+ const act=data[K].filter(x=>!x.done&&F(x)).sort((p,q)=>(rank[p.flag]??2)-(rank[q.flag]??2));
+ [...act,...data[K].filter(x=>x.done&&F(x))].forEach(x=>{const li=document.createElement('li'),d=document.createElement('span');d.className='dot';d.title=x.done?'Restore':'Archive';
  d.onclick=()=>{x.done=!x.done;x.when=iso(new Date());save();render()};
  const f=document.createElement('span');f.className='flag '+(x.flag||'none');f.textContent='\u2691';f.title='Click: no flag, yellow (by tomorrow), red (today)';
  f.onclick=()=>{x.flag=x.flag==null||x.flag=='none'?'yellow':x.flag=='yellow'?'red':'none';x.fd=iso(new Date());save();render()};
  if(x.flag=='red')li.classList.add('red');if(x.flag=='yellow')li.classList.add('yel');
  const s=document.createElement('small');s.textContent=x.when||'';li.append(d,f,x.text,s);
  (x.done?(a++,$(P+'alist')):$(P+'list')).append(li)});$(P+'ac').textContent=a}
+// ===== Personal task lists =====
+function ensureP(){data.plists=data.plists||[];data.personal=data.personal||[];
+ if(!data.plists.length)data.plists.push({id:'general',name:'General'});
+ const ids=new Set(data.plists.map(l=>l.id));let ch=false;
+ data.personal.forEach(x=>{if(!x.list||!ids.has(x.list)){x.list=data.plists[0].id;ch=true}});if(ch&&fh)save()}
+function curP(){ensureP();let c=null;try{c=localStorage.getItem('nt_plist')}catch(e){}
+ return data.plists.some(l=>l.id===c)?c:data.plists[0].id}
+function setP(id){try{localStorage.setItem('nt_plist',id)}catch(e){}}
+function rPP(){ensureP();const c=curP(),W=$('ppills');W.innerHTML='';
+ data.plists.forEach(l=>{const b=document.createElement('button');b.className='pill'+(l.id===c?' on':'');b.textContent=l.name;
+  const n=data.personal.filter(x=>x.list===l.id&&!x.done).length;if(n){const s=document.createElement('span');s.className='gm';s.textContent=n;b.append(s)}
+  b.onclick=()=>{setP(l.id);render()};W.append(b)});
+ const nb=document.createElement('button');nb.className='pill new';nb.textContent='+ New list';nb.disabled=!fh;
+ nb.onclick=()=>{const v=(prompt('Name for the new list (e.g. Packing, House):')||'').trim();if(!v)return;
+  if(data.plists.some(l=>l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');
+  const id='l'+Date.now().toString(36);data.plists.push({id,name:v});setP(id);save();render()};W.append(nb);
+ const cl=data.plists.find(l=>l.id===c);
+ const rn=document.createElement('button');rn.className='pill';rn.textContent='Rename';rn.disabled=!fh;
+ rn.onclick=()=>{const v=(prompt('Rename list "'+cl.name+'" to:',cl.name)||'').trim();if(!v||v===cl.name)return;
+  if(data.plists.some(l=>l!==cl&&l.name.toLowerCase()===v.toLowerCase()))return alert('There is already a list called '+v+'.');cl.name=v;save();render()};
+ const dl=document.createElement('button');dl.className='pill';dl.textContent='Delete';dl.disabled=!fh;
+ dl.onclick=()=>{if(data.plists.length<2)return alert('You need at least one list. Rename this one instead.');
+  const n=data.personal.filter(x=>x.list===cl.id).length;
+  if(!confirm('Delete the list "'+cl.name+'"'+(n?' and its '+n+' task'+(n>1?'s':'')+' (including archived)':'')+'? This cannot be undone.'))return;
+  data.personal=data.personal.filter(x=>x.list!==cl.id);data.plists=data.plists.filter(l=>l!==cl);setP(data.plists[0].id);save();render()};
+ W.append(rn,dl);$('pname').textContent=cl.name}
+
 function render(){renderList('tasks','');renderList('personal','p')}
-function addT(K,P){const v=$(P+'newt').value.trim();if(!v)return;data[K]=data[K]||[];data[K].unshift({text:v,done:false,when:iso(new Date())});$(P+'newt').value='';save();render()}
+function addT(K,P){const v=$(P+'newt').value.trim();if(!v)return;data[K]=data[K]||[];data[K].unshift(K=='personal'?{text:v,done:false,when:iso(new Date()),list:curP()}:{text:v,done:false,when:iso(new Date())});$(P+'newt').value='';save();render()}
 function add(){addT('tasks','')}
 $('addb').onclick=add;$('newt').onkeydown=e=>{if(e.key=='Enter')add()};$('paddb').onclick=()=>addT('personal','p');$('pnewt').onkeydown=e=>{if(e.key=='Enter')addT('personal','p')};
 setInterval(()=>{render();if(!document.querySelector(".det .nm:not([hidden])"))rY();if(iso(cur)!==iso(new Date())&&$('next').disabled){cur=new Date();showDay()}},60000);
@@ -382,7 +413,7 @@ document.querySelectorAll('#tb button').forEach(b=>{b.onmousedown=e=>e.preventDe
  const c=b.dataset.c,v=b.dataset.v;document.execCommand('styleWithCSS',false,c=='hl'||c=='foreColor');
  if(c=='hl')document.execCommand('hiliteColor',false,v);else document.execCommand(c,false,v||null);
  data.notes[iso(cur)]=noteHTML();save()}});
-function lock(on){$('txt').contentEditable=!on;$('newt').disabled=on;$('addb').disabled=on;$('pnewt').disabled=on;$('paddb').disabled=on;$('yadd').disabled=on;$('ytext').disabled=on;$('nbnew').disabled=on;$('pgnew').disabled=on;$('nbtitle').disabled=on;$('nbtxt').contentEditable=!on;if(on)$('txt').dataset.ph='Sign in with Microsoft above to load your notes.';else $('txt').dataset.ph="Today's work notes... (paste screenshots with Ctrl+V)"}
+function lock(on){$('txt').contentEditable=!on;$('newt').disabled=on;$('addb').disabled=on;$('pnewt').disabled=on;$('ppills').querySelectorAll('button').forEach(b=>{if(!b.classList.contains('on')&&b.textContent.match(/^(\+ New list|Rename|Delete)$/))b.disabled=on});$('paddb').disabled=on;$('yadd').disabled=on;$('ytext').disabled=on;$('nbnew').disabled=on;$('pgnew').disabled=on;$('nbtitle').disabled=on;$('nbtxt').contentEditable=!on;if(on)$('txt').dataset.ph='Sign in with Microsoft above to load your notes.';else $('txt').dataset.ph="Today's work notes... (paste screenshots with Ctrl+V)"}
 var lastTab='t';
 const sesc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function plain(h){const d=document.createElement('div');d.innerHTML=String(h||'').replace(/<img[^>]*>/gi,' ');d.querySelectorAll('br,div,p,li,h3').forEach(e=>e.after(' '));return d.textContent.replace(/\s+/g,' ').trim()}
@@ -394,14 +425,14 @@ function doSearch(){const raw=$('sq').value.trim(),q=raw.toLowerCase().replace(/
  const grp=(title,items)=>{if(!items.length)return;total+=items.length;const h=document.createElement('h4');h.textContent=title+' ('+items.length+')';const u=document.createElement('ul');items.forEach(([meta,html,go])=>{const li=document.createElement('li');li.innerHTML='<small>'+sesc(meta)+'</small>'+html;li.onclick=go;u.append(li)});R.append(h,u)};
  const fd=k=>new Date(k+'T12:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
  grp('Daily notes',Object.keys(data.notes).sort().reverse().map(k=>[k,plain(data.notes[k])]).filter(([k,t])=>t.toLowerCase().includes(q)).map(([k,t])=>[fd(k),snip(t,q),()=>openNote(k,raw.replace(/\s+/g,' '))]));
- [['tasks','Work task'],['personal','Personal task']].forEach(([K,L])=>grp(L+'s',(data[K]||[]).filter(x=>(x.text||'').toLowerCase().includes(q)).sort((a,b)=>(b.when||'').localeCompare(a.when||'')).map(x=>[L+' \u00b7 '+(x.done?'Archived':'Active')+(x.when?' \u00b7 '+fd(x.when):''),snip(x.text,q),()=>openTask(x,K)])));
+ [['tasks','Work task'],['personal','Personal task']].forEach(([K,L])=>grp(L+'s',(data[K]||[]).filter(x=>(x.text||'').toLowerCase().includes(q)).sort((a,b)=>(b.when||'').localeCompare(a.when||'')).map(x=>[L+((K=='personal'&&(data.plists||[]).find(l=>l.id===x.list))?' ('+data.plists.find(l=>l.id===x.list).name+')':'')+' \u00b7 '+(x.done?'Archived':'Active')+(x.when?' \u00b7 '+fd(x.when):''),snip(x.text,q),()=>openTask(x,K)])));
  const nbHits=[];(data.notebooks||[]).forEach(nb=>(nb.pages||[]).forEach(pg=>{const blob=((pg.title||'')+' '+plain(pg.html||''));if(!blob.toLowerCase().includes(q))return;nbHits.push([(nb.name||'Notebook')+' \u00b7 '+(pg.title||'Untitled'),snip(blob,q),()=>openNbSearch(nb.id,pg.id)])}));grp('Notebook pages',nbHits);
  grp('Yearly tasks',(data.yearly||[]).map(y=>[y,(y.text||'')+' \u2014 '+(y.det||'').replace(/\s+/g,' ')]).filter(([y,t])=>t.toLowerCase().includes(q)).sort((a,b)=>(b[0].md||'').localeCompare(a[0].md||'')).map(([y,t])=>[(ensureG(),ungrouped(y)?'Ungrouped':y.group)+' \u00b7 Due '+new Date('2000-'+y.md+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}),snip(t,q),()=>openYear(y)]));
  if(!total)R.innerHTML='<p style="color:#888">No matches for \u201c'+sesc(raw)+'\u201d.</p>'}
 function clearS(){$('sq').value='';doSearch()}
 function openNote(k,raw){clearS();cur=new Date(k+'T12:00');tab('n');showDay();setTimeout(()=>{const sel=getSelection();sel.removeAllRanges();const r=document.createRange();r.setStart($('txt'),0);r.collapse(true);sel.addRange(r);if(window.find&&window.find(raw,false,false,false,false,false,false)){const n=getSelection().anchorNode;(n&&n.parentElement||$('txt')).scrollIntoView({block:'center'})}else $('txt').scrollIntoView()},50)}
 function flash(li){if(!li)return;li.scrollIntoView({block:'center'});li.classList.add('flash');setTimeout(()=>li.classList.remove('flash'),2500)}
-function openTask(x,K){const P=K=='personal'?'p':'';clearS();tab(P?'p':'t');render();if(x.done)document.querySelector('#'+(P?'personal':'tasks')+' details').open=true;flash([...document.querySelectorAll('#'+P+'list li,#'+P+'alist li')].find(li=>li.textContent.includes(x.text)))}
+function openTask(x,K){const P=K=='personal'?'p':'';if(P&&x.list)setP(x.list);clearS();tab(P?'p':'t');render();if(x.done)document.querySelector('#'+(P?'personal':'tasks')+' details').open=true;flash([...document.querySelectorAll('#'+P+'list li,#'+P+'alist li')].find(li=>li.textContent.includes(x.text)))}
 function openNbSearch(nid,pid){clearS();tab('bk');openPage(nid,pid)}
 function openYear(y){clearS();ensureG();data.ygroup=ungrouped(y)?'All':y.group;save();openY.add(y);tab('y');rY();flash([...document.querySelectorAll('#ylist li')].find(li=>li.querySelector('.yt').textContent.startsWith(y.text)))}
 $('sq').oninput=doSearch;$('sq').onkeydown=e=>{if(e.key=='Escape')clearS()};$('sx').onclick=clearS;
